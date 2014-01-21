@@ -56,15 +56,22 @@ void move(direction dir) {
 /* Locks the current block in place and makes a new one
    The logic is currently split up / not implemented. Deal with it. */
 void refreshBlock() {
-   int type = I_BLOCK; //MAKE RANDOM
+   tetromino type = O_BLOCK; //MAKE RANDOM
+   block.type = type;
+
    switch(type) {
       case I_BLOCK:
-         block.type = I_BLOCK;
          block.a.x = 4; block.a.y = -3;
          block.b.x = 4; block.b.y = -2;
          block.c.x = 4; block.c.y = -1;
          block.d.x = 4; block.d.y =  0;
          break;
+      default:
+      case O_BLOCK:
+         block.a.x = 4; block.a.y = -1;
+         block.b.x = 4; block.b.y = -0;
+         block.c.x = 5; block.c.y = -1;
+         block.d.x = 5; block.d.y =  0;
    }
    // Update Next Tetrominos...
 }
@@ -156,6 +163,11 @@ void initGame() {
    init_pair(7, COLOR_MAGENTA, COLOR_BLACK);  // T
    init_pair(8, COLOR_WHITE, COLOR_BLACK);    // Default
 
+   for(int y = 0; y < 20; y++) {
+      for(int x = 0; x < 10; x++) {
+         grid[x][y] = EMPTY;
+      }
+   }
    printGrid();
    refresh();
 }
@@ -179,22 +191,22 @@ void printBlocks() {
    // Print Falling Block
    color(block.type);
    if (block.a.y >= 0) {
-      print(X_OFFSET + block.a.x * 5, Y_OFFSET + block.a.y * 2,     "|¯ ¯|");
+      print(X_OFFSET + block.a.x * 5, Y_OFFSET + block.a.y * 2,     "|' '|");
       print(X_OFFSET + block.a.x * 5, Y_OFFSET + block.a.y * 2 + 1, "|_ _|");
    }
 
    if (block.b.y >= 0) {
-      print(X_OFFSET + block.b.x * 5, Y_OFFSET + block.b.y * 2,     "|¯ ¯|");
+      print(X_OFFSET + block.b.x * 5, Y_OFFSET + block.b.y * 2,     "|' '|");
       print(X_OFFSET + block.b.x * 5, Y_OFFSET + block.b.y * 2 + 1, "|_ _|");
    }
 
    if (block.c.y >= 0) {
-      print(X_OFFSET + block.c.x * 5, Y_OFFSET + block.c.y * 2,     "|¯ ¯|");
+      print(X_OFFSET + block.c.x * 5, Y_OFFSET + block.c.y * 2,     "|' '|");
       print(X_OFFSET + block.c.x * 5, Y_OFFSET + block.c.y * 2 + 1, "|_ _|");
    }
 
    if (block.d.y >= 0) {
-      print(X_OFFSET + block.d.x * 5, Y_OFFSET + block.d.y * 2,     "|¯ ¯|");
+      print(X_OFFSET + block.d.x * 5, Y_OFFSET + block.d.y * 2,     "|' '|");
       print(X_OFFSET + block.d.x * 5, Y_OFFSET + block.d.y * 2 + 1, "|_ _|");
    }
 
@@ -203,12 +215,11 @@ void printBlocks() {
       for(int x = 0; x < 10; x++) {
          if (grid[x][y] != EMPTY) {
             color(grid[x][y]);
-            print(X_OFFSET + x * 5, Y_OFFSET + y * 2,     "|¯ ¯|");
+            print(X_OFFSET + x * 5, Y_OFFSET + y * 2,     "|' '|");
             print(X_OFFSET + x * 5, Y_OFFSET + y * 2 + 1, "|_ _|");
          }
       }
    }
-
 }
 
 /* Check whether the current piece can be moved */
@@ -261,7 +272,7 @@ void updateGrid() {
       move(DOWN);
    } else {
       setBlock(block.type);
-       //Check if a row was completed
+      //Check if a row was completed
       refreshBlock();
    }
 }
