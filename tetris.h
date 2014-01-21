@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/time.h> 
 #include <signal.h> 
+#include <vector>
 
 #define GRID_START 6
 #define GRID_END 47
@@ -49,6 +50,7 @@ typedef struct Block {
    Piece d;
 } Block;
 
+int weights[7];
 
 WINDOW * mainwin;
 bool initialized = false;
@@ -64,15 +66,18 @@ void closeGame();
 bool canMove(direction dir);
 void alarm_wakeup (int i);
 void redraw();
-void move(direction);
+bool move(direction);
 void print(int x, int y, const char* message);
 bool isFilled(Piece, int);
 void color(int);
 void setColors(bool);
 void emptyGrid();
 void clearLines();
+int pseudoRandom();
+void space();
 
 void printGrid();
 void printBlocks();
+void printWeights();
 void refreshBlock();
 void updateGrid();

@@ -36,6 +36,9 @@ void mainLoop() {
             case 'r' :
                refreshBlock();
                break;
+            case ' ':
+               space();
+               break;
             case 'l':
                break;
             case 'e':
@@ -48,22 +51,22 @@ void mainLoop() {
 }
 
 /* Moves tetromino if the action is allowed */
-void move(direction dir) {
+bool move(direction dir) {
    if (canMove(dir)) {
       switch(dir) {
          case LEFT:  block.a.x--; block.b.x--; block.c.x--; block.d.x--; break;
          case RIGHT: block.a.x++; block.b.x++; block.c.x++; block.d.x++; break;
          case DOWN:  block.a.y++; block.b.y++; block.c.y++; block.d.y++; break;
       }
+      return true;
    }
+   return false;
 }
 
 /* Locks the current block in place and makes a new one
    The logic is currently split up / not implemented. Deal with it. */
 void refreshBlock() {
-   // Random is too random. Stack the odds towards uniformity
-   //int type = (rand() % 7) + 1;
-   int type = O_BLOCK;
+   int type = pseudoRandom();
    block.type = (tetromino)type;
 
    switch(type) {
@@ -198,6 +201,9 @@ void initGame() {
 
    srand (time(NULL));
    emptyGrid();
+   for(int i = 0; i < 7; i++) {
+      weights[i] = 1;
+   }
    printGrid();
    refresh();
 }
@@ -209,6 +215,42 @@ void emptyGrid() {
       }
    }
 }
+
+void space() {
+   while(move(DOWN)) { }
+   updateGrid();
+   redraw();
+}
+
+// This should be fine-tuned. Okay for now.
+int pseudoRandom() {
+   std::vector<int> probabilities;
+   std::vector<int>::iterator it;
+
+   for (int i = 0; i < 7; i++) {
+      it = probabilities.begin();
+      probabilities.insert(it, weights[i], i + 1);
+   }
+
+   int result = probabilities[rand() % probabilities.size()];
+   for (int i = 0; i < 7; i++) {
+      if (i == result - 1) {
+         weights[i] = 1;
+      } else {
+         weights[i] *= 2;
+      }
+   } 
+
+   return result;
+}
+
+void printWeights() {
+   for (int i = 0; i < 7; i++) {
+      printf("%d, ", weights[i]);
+   }
+   printf("\n");
+}
+
 void clearLines() {
    int linesCleared = 0;
 
@@ -345,11 +387,8 @@ void setBlock(int type) {
 
 /* Called from our alarm, decide how a forced decent affects our grid */
 void updateGrid() {
-   if (canMove(DOWN)) {
-      move(DOWN);
-   } else {
+   if (!move(DOWN)) {
       setBlock(block.type);
-      //Check if a row was completed
       clearLines();
       refreshBlock();
    }
@@ -372,6 +411,7 @@ void alarm_wakeup (int i) {
    printGrid();
    updateGrid();
    printBlocks();
+   //printWeights();
    refresh();
 
    //setitimer(ITIMER_REAL, &tout_val,0);
