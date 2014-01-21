@@ -36,6 +36,11 @@ void mainLoop() {
             case 'r' :
                refreshBlock();
                break;
+            case 'l':
+               break;
+            case 'e':
+               emptyGrid();
+               break;
          }
       }
       ch = getch();
@@ -56,8 +61,10 @@ void move(direction dir) {
 /* Locks the current block in place and makes a new one
    The logic is currently split up / not implemented. Deal with it. */
 void refreshBlock() {
-   tetromino type = O_BLOCK; //MAKE RANDOM
-   block.type = type;
+   // Random is too random. Stack the odds towards uniformity
+   //int type = (rand() % 7) + 1;
+   int type = O_BLOCK;
+   block.type = (tetromino)type;
 
    switch(type) {
       case I_BLOCK:
@@ -66,12 +73,44 @@ void refreshBlock() {
          block.c.x = 4; block.c.y = -1;
          block.d.x = 4; block.d.y =  0;
          break;
-      default:
+      case J_BLOCK:
+         block.a.x = 5; block.a.y = -2;
+         block.b.x = 5; block.b.y = -1;
+         block.c.x = 5; block.c.y =  0;
+         block.d.x = 4; block.d.y =  0;
+         break;
+      case L_BLOCK:
+         block.a.x = 4; block.a.y = -2;
+         block.b.x = 4; block.b.y = -1;
+         block.c.x = 4; block.c.y =  0;
+         block.d.x = 5; block.d.y =  0;
+         break;
       case O_BLOCK:
          block.a.x = 4; block.a.y = -1;
          block.b.x = 4; block.b.y = -0;
          block.c.x = 5; block.c.y = -1;
          block.d.x = 5; block.d.y =  0;
+         break;
+      case S_BLOCK:
+         block.a.x = 5; block.a.y = -1;
+         block.b.x = 4; block.b.y = -1;
+         block.c.x = 4; block.c.y =  0;
+         block.d.x = 3; block.d.y =  0;
+         break;
+      case Z_BLOCK:
+         block.a.x = 3; block.a.y = -1;
+         block.b.x = 4; block.b.y = -1;
+         block.c.x = 4; block.c.y =  0;
+         block.d.x = 5; block.d.y =  0;
+         break;
+      case T_BLOCK:
+         block.a.x = 3; block.a.y = -1;
+         block.b.x = 4; block.b.y = -1;
+         block.c.x = 5; block.c.y = -1;
+         block.d.x = 4; block.d.y =  0;
+         break;
+      default:
+         break;
    }
    // Update Next Tetrominos...
 }
@@ -83,59 +122,60 @@ void printGrid() {
    for(int i = GRID_START; i <= GRID_END; i++) {
       switch(i) {
          case GRID_START:
-            print(0, i, " _________________________  __________________________________________________  _________________________");
+            print(i, 0, " _________________________  __________________________________________________  _________________________");
             break;
          case GRID_END:
-            print(0, i, "￣￣￣￣￣￣￣￣￣￣￣￣￣  ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣  ￣￣￣￣￣￣￣￣￣￣￣￣￣");
+            print(i, 0, "￣￣￣￣￣￣￣￣￣￣￣￣￣  ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣  ￣￣￣￣￣￣￣￣￣￣￣￣￣");
             break;
          default:
-            print(0, i, "|                         ||                                                  ||                         |");
+            print(i, 0, "|                         ||                                                  ||                         |");
             break;
       }
    }
 
    // Score
-   print(SCORE_X, SCORE_Y,     ",-. ,-. ,-. ,-. ,-.");
-   print(SCORE_X, SCORE_Y + 1, "`-. |   | | |   |-'   ::");
-   print(SCORE_X, SCORE_Y + 2, "`-' `-' `-' '   `-'");
+   print(SCORE_Y,     SCORE_X, ",-. ,-. ,-. ,-. ,-.");
+   print(SCORE_Y + 1, SCORE_X, "`-. |   | | |   |-'   ::");
+   print(SCORE_Y + 2, SCORE_X, "`-' `-' `-' '   `-'");
 
    // Hold
-   print(HOLD_X, HOLD_Y,     ".       .    .");
-   print(HOLD_X, HOLD_Y + 1, "|-. ,-. |  ,-|");
-   print(HOLD_X, HOLD_Y + 2, "| | | | |  | |");
-   print(HOLD_X, HOLD_Y + 3, "' ' `-' `' `-'");
+   print(HOLD_Y,     HOLD_X, ".       .    .");
+   print(HOLD_Y + 1, HOLD_X, "|-. ,-. |  ,-|");
+   print(HOLD_Y + 2, HOLD_X, "| | | | |  | |");
+   print(HOLD_Y + 3, HOLD_X, "' ' `-' `' `-'");
 
    // Level
-   print(LEVEL_X, LEVEL_Y,     ".               .");
-   print(LEVEL_X, LEVEL_Y + 1, "|  ,-. .  , ,-. |");
-   print(LEVEL_X, LEVEL_Y + 2, "|  |-' | /  |-' |");
-   print(LEVEL_X, LEVEL_Y + 3, "`' `-' `'   `-' `'");
+   print(LEVEL_Y,     LEVEL_X, ".               .");
+   print(LEVEL_Y + 1, LEVEL_X, "|  ,-. .  , ,-. |");
+   print(LEVEL_Y + 2, LEVEL_X, "|  |-' | /  |-' |");
+   print(LEVEL_Y + 3, LEVEL_X, "`' `-' `'   `-' `'");
 
    // Goal
-   print(GOAL_X, GOAL_Y,     "           .");
-   print(GOAL_X, GOAL_Y + 1, ",-. ,-. ,-. |");
-   print(GOAL_X, GOAL_Y + 2, "| | | | ,-| |");
-   print(GOAL_X, GOAL_Y + 3, "`-| `-' `-^ `'");
-   print(GOAL_X, GOAL_Y + 4, " ,|");
-   print(GOAL_X, GOAL_Y + 5, " `'");
+   print(GOAL_Y,     GOAL_X, "           .");
+   print(GOAL_Y + 1, GOAL_X, ",-. ,-. ,-. |");
+   print(GOAL_Y + 2, GOAL_X, "| | | | ,-| |");
+   print(GOAL_Y + 3, GOAL_X, "`-| `-' `-^ `'");
+   print(GOAL_Y + 4, GOAL_X, " ,|");
+   print(GOAL_Y + 5, GOAL_X, " `'");
 
    // Next
-   print(NEXT_X, NEXT_Y,     ",-. ,-. . , |-");
-   print(NEXT_X, NEXT_Y + 1, "| | |-'  X  |");
-   print(NEXT_X, NEXT_Y + 2, "' ' `-' ' ` `'");
+   print(NEXT_Y,     NEXT_X, ",-. ,-. . , |-");
+   print(NEXT_Y + 1, NEXT_X, "| | |-'  X  |");
+   print(NEXT_Y + 2, NEXT_X, "' ' `-' ' ` `'");
 }
 
 /* Sets text color according to block type */
 void color(int type) {
+   attroff(A_BOLD);
    switch(type) {
       case I_BLOCK: attron(COLOR_PAIR(1)); break;
       case J_BLOCK: attron(COLOR_PAIR(2)); break;
       case L_BLOCK: attron(COLOR_PAIR(3)); break;
-      case O_BLOCK: attron(COLOR_PAIR(4)); break;
+      case O_BLOCK: attron(COLOR_PAIR(4)); attron(A_BOLD); break;
       case S_BLOCK: attron(COLOR_PAIR(5)); break;
       case Z_BLOCK: attron(COLOR_PAIR(6)); break;
       case T_BLOCK: attron(COLOR_PAIR(7)); break;
-      default:      attron(COLOR_PAIR(8)); break;
+      default:      attron(COLOR_PAIR(8)); attron(A_BOLD); break;
    }
 }
 
@@ -152,28 +192,65 @@ void initGame() {
    noecho();
    start_color();
 
-   // Testing colors. Most are fine, but orange isn't supported (and yellow
-   // looks orange...) Look into custom colors next.
-   init_pair(1, COLOR_BLUE, COLOR_BLACK);     // I
-   init_pair(2, COLOR_BLUE, COLOR_BLACK);     // J
-   //init_pair(3, COLOR_ORANGE, COLOR_BLACK); // L
-   init_pair(4, COLOR_YELLOW, COLOR_BLACK);   // O
-   init_pair(5, COLOR_GREEN, COLOR_BLACK);    // S
-   init_pair(6, COLOR_RED, COLOR_BLACK);      // Z
-   init_pair(7, COLOR_MAGENTA, COLOR_BLACK);  // T
-   init_pair(8, COLOR_WHITE, COLOR_BLACK);    // Default
+   init_color(COLOR_BLACK, 0, 0, 0);
+   init_color(COLOR_CYAN, 204, 204, 1000); // BLUE... actually
+   setColors(false);
 
-   for(int y = 0; y < 20; y++) {
-      for(int x = 0; x < 10; x++) {
-         grid[x][y] = EMPTY;
-      }
-   }
+   srand (time(NULL));
+   emptyGrid();
    printGrid();
    refresh();
 }
 
+void emptyGrid() {
+   for(int y = 0; y < 20; y++) {
+      for(int x = 0; x < 10; x++) {
+         grid[y][x] = EMPTY;
+      }
+   }
+}
+void clearLines() {
+   int linesCleared = 0;
+
+   for(int y = 0; y < 20; y++) {
+      for(int x = 0; x < 10; x++) {
+         if (grid[y][x] == EMPTY) {
+            break;
+         } else if (x == 9) {
+            linesCleared++;
+            for (int y2 = y; y2 > 0; y2--) {
+               std::copy(grid[y2 - 1], grid[y2 - 1] + 10, grid[y2]);
+            }
+         }
+      }
+   }
+}
+
+void setColors(bool full) {
+   if (full) {
+      init_pair(1, COLOR_BLUE,    COLOR_BLUE);    // I - THis is cyan
+      init_pair(2, COLOR_YELLOW,  COLOR_YELLOW);  // J - This is orange
+      init_pair(3, COLOR_CYAN,    COLOR_CYAN);    // L - This is blue
+      init_pair(4, COLOR_YELLOW,  COLOR_YELLOW);  // O
+      init_pair(5, COLOR_GREEN,   COLOR_GREEN);   // S
+      init_pair(6, COLOR_RED,     COLOR_RED);     // Z
+      init_pair(7, COLOR_MAGENTA, COLOR_MAGENTA); // T
+      init_pair(8, COLOR_WHITE,   COLOR_BLACK);   // Default
+   } else {
+      init_pair(1, COLOR_BLUE,    COLOR_BLACK);  // I
+      init_pair(2, COLOR_YELLOW,  COLOR_BLACK);  // J
+      init_pair(3, COLOR_CYAN,    COLOR_BLACK);  // L
+      init_pair(4, COLOR_YELLOW,  COLOR_BLACK);  // O
+      init_pair(5, COLOR_GREEN,   COLOR_BLACK);  // S
+      init_pair(6, COLOR_RED,     COLOR_BLACK);  // Z
+      init_pair(7, COLOR_MAGENTA, COLOR_BLACK);  // T
+      init_pair(8, COLOR_WHITE,   COLOR_BLACK);  // Default
+   }
+}
+
+
 /* Debugging? Not really useful anymore... printf works fineish */
-void print(int x, int y, const char* message) {
+void print(int y, int x, const char* message) {
    mvaddstr(y, x, message);
 }
 
@@ -191,32 +268,32 @@ void printBlocks() {
    // Print Falling Block
    color(block.type);
    if (block.a.y >= 0) {
-      print(X_OFFSET + block.a.x * 5, Y_OFFSET + block.a.y * 2,     "|' '|");
-      print(X_OFFSET + block.a.x * 5, Y_OFFSET + block.a.y * 2 + 1, "|_ _|");
+      print(Y_OFFSET + block.a.y * 2,     X_OFFSET + block.a.x * 5, "|' '|");
+      print(Y_OFFSET + block.a.y * 2 + 1, X_OFFSET + block.a.x * 5, "|_ _|");
    }
 
    if (block.b.y >= 0) {
-      print(X_OFFSET + block.b.x * 5, Y_OFFSET + block.b.y * 2,     "|' '|");
-      print(X_OFFSET + block.b.x * 5, Y_OFFSET + block.b.y * 2 + 1, "|_ _|");
+      print(Y_OFFSET + block.b.y * 2,     X_OFFSET + block.b.x * 5, "|' '|");
+      print(Y_OFFSET + block.b.y * 2 + 1, X_OFFSET + block.b.x * 5, "|_ _|");
    }
 
    if (block.c.y >= 0) {
-      print(X_OFFSET + block.c.x * 5, Y_OFFSET + block.c.y * 2,     "|' '|");
-      print(X_OFFSET + block.c.x * 5, Y_OFFSET + block.c.y * 2 + 1, "|_ _|");
+      print(Y_OFFSET + block.c.y * 2,     X_OFFSET + block.c.x * 5, "|' '|");
+      print(Y_OFFSET + block.c.y * 2 + 1, X_OFFSET + block.c.x * 5, "|_ _|");
    }
 
    if (block.d.y >= 0) {
-      print(X_OFFSET + block.d.x * 5, Y_OFFSET + block.d.y * 2,     "|' '|");
-      print(X_OFFSET + block.d.x * 5, Y_OFFSET + block.d.y * 2 + 1, "|_ _|");
+      print(Y_OFFSET + block.d.y * 2,     X_OFFSET + block.d.x * 5, "|' '|");
+      print(Y_OFFSET + block.d.y * 2 + 1, X_OFFSET + block.d.x * 5, "|_ _|");
    }
 
    // Print Fallen Blocks
    for(int y = 0; y < 20; y++) {
       for(int x = 0; x < 10; x++) {
-         if (grid[x][y] != EMPTY) {
-            color(grid[x][y]);
-            print(X_OFFSET + x * 5, Y_OFFSET + y * 2,     "|' '|");
-            print(X_OFFSET + x * 5, Y_OFFSET + y * 2 + 1, "|_ _|");
+         if (grid[y][x] != EMPTY) {
+            color(grid[y][x]);
+            print(Y_OFFSET + y * 2,     X_OFFSET + x * 5, "|' '|");
+            print(Y_OFFSET + y * 2 + 1, X_OFFSET + x * 5, "|_ _|");
          }
       }
    }
@@ -248,10 +325,10 @@ bool canMove(direction dir) {
    }
 
    // Check grid for obstacles
-   if ((block.a.y + y >= 0 && grid[block.a.x + x][block.a.y + y] != EMPTY) ||
-       (block.b.y + y >= 0 && grid[block.b.x + x][block.b.y + y] != EMPTY) ||
-       (block.c.y + y >= 0 && grid[block.c.x + x][block.c.y + y] != EMPTY) ||
-       (block.d.y + y >= 0 && grid[block.d.x + x][block.d.y + y] != EMPTY)) {
+   if ((block.a.y + y >= 0 && grid[block.a.y + y][block.a.x + x] != EMPTY) ||
+       (block.b.y + y >= 0 && grid[block.b.y + y][block.b.x + x] != EMPTY) ||
+       (block.c.y + y >= 0 && grid[block.c.y + y][block.c.x + x] != EMPTY) ||
+       (block.d.y + y >= 0 && grid[block.d.y + y][block.d.x + x] != EMPTY)) {
       return false;
    }
 
@@ -260,10 +337,10 @@ bool canMove(direction dir) {
 
 /* Locks our current block into the grid */
 void setBlock(int type) {
-   grid[block.a.x][block.a.y] = type;
-   grid[block.b.x][block.b.y] = type;
-   grid[block.c.x][block.c.y] = type;
-   grid[block.d.x][block.d.y] = type;
+   grid[block.a.y][block.a.x] = type;
+   grid[block.b.y][block.b.x] = type;
+   grid[block.c.y][block.c.x] = type;
+   grid[block.d.y][block.d.x] = type;
 }
 
 /* Called from our alarm, decide how a forced decent affects our grid */
@@ -273,6 +350,7 @@ void updateGrid() {
    } else {
       setBlock(block.type);
       //Check if a row was completed
+      clearLines();
       refreshBlock();
    }
 }

@@ -32,7 +32,6 @@
 #define BUFFER 3
 
 typedef enum {LEFT, RIGHT, DOWN} direction;
-
 typedef enum {
    EMPTY, I_BLOCK, J_BLOCK, L_BLOCK, O_BLOCK, S_BLOCK, Z_BLOCK, T_BLOCK, DEFAULT
 } tetromino;
@@ -55,20 +54,25 @@ WINDOW * mainwin;
 bool initialized = false;
 int debug = 0;
 int speed = 1000000; //FLAWED... Sec vs uSec
-int grid[10][20] = {0};
+int grid[20][10];
 Block block;
+
+void initGame();
+void mainLoop();
+void closeGame();
 
 bool canMove(direction dir);
 void alarm_wakeup (int i);
 void redraw();
 void move(direction);
 void print(int x, int y, const char* message);
-void initGame();
-void mainLoop();
-void closeGame();
-void printGrid();
-void printBlocks();
 bool isFilled(Piece, int);
 void color(int);
+void setColors(bool);
+void emptyGrid();
+void clearLines();
+
+void printGrid();
+void printBlocks();
 void refreshBlock();
 void updateGrid();
