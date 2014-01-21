@@ -44,6 +44,7 @@ typedef struct Piece {
 
 typedef struct Block {
    tetromino type;
+   int state;
    Piece a;
    Piece b;
    Piece c;
@@ -75,6 +76,7 @@ void emptyGrid();
 void clearLines();
 int pseudoRandom();
 void space();
+void rotate();
 
 void printGrid();
 void printBlocks();

@@ -25,7 +25,7 @@ void mainLoop() {
       if (ch == '\033') {
          getch(); // Get rid of slash
          switch (getch()) {
-            case 'A': break;                        // Up
+            case 'A': rotate();    redraw(); break; // Up
             case 'B': move(DOWN);  redraw(); break; // Down
             case 'C': move(RIGHT); redraw(); break; // Right
             case 'D': move(LEFT);  redraw(); break; // Left
@@ -50,6 +50,37 @@ void mainLoop() {
    }
 }
 
+void rotate() {
+   int y = 0, x = 0;
+   Block b = block;
+   switch(block.type) {
+      case I_BLOCK:
+         switch(block.state) {
+            case 0:
+               if (block.c.x - 1 < 0) { x =  1; } // Rotate next to left wall
+               if (block.c.x + 2 > 9) { x = -2; } // Rotate next to right wall
+               for (int i = 0; i < 3; i++) {
+                  if (block.c.y - i < 0) { return; } // Respect the ceiling
+                  if (grid[block.c.y - i][block.c.x - 1 + x] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 0 + x] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 1 + x] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 2 + x] == EMPTY) {
+                     block.d.y = b.c.y - i; block.d.x = b.c.x - 1 + x;
+                     block.c.y = b.c.y - i; block.c.x = b.c.x + 0 + x;
+                     block.b.y = b.c.y - i; block.b.x = b.c.x + 1 + x;
+                     block.a.y = b.c.y - i; block.a.x = b.c.x + 2 + x;
+                     return;
+                  }
+               }
+               return;
+            default:
+               break;
+         }
+         break;
+      default: break;
+   }
+}
+
 /* Moves tetromino if the action is allowed */
 bool move(direction dir) {
    if (canMove(dir)) {
@@ -68,6 +99,7 @@ bool move(direction dir) {
 void refreshBlock() {
    int type = pseudoRandom();
    block.type = (tetromino)type;
+   block.state = 0;
 
    switch(type) {
       case I_BLOCK:
