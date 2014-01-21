@@ -51,28 +51,52 @@ void mainLoop() {
 }
 
 void rotate() {
-   int y = 0, x = 0;
+   int yDif = 0, xDif = 0;
+   int i = 0, j = 0;
+   int xOrder[3] = {0, 0, 0};
+   int yOrder[3] = {0, 0, 0};
    Block b = block;
    switch(block.type) {
       case I_BLOCK:
          switch(block.state) {
-            case 0:
-               if (block.c.x - 1 < 0) { x =  1; } // Rotate next to left wall
-               if (block.c.x + 2 > 9) { x = -2; } // Rotate next to right wall
-               for (int i = 0; i < 3; i++) {
+            case 0: // 0 -> 90
+               if (block.c.x - 1 < 0) { xDif =  1; } // Rotate next to left wall
+               if (block.c.x + 2 > 9) { xDif = -2; } // Rotate next to right wall
+               yOrder[0] = 0; // c -> b -> a
+               yOrder[1] = 1;
+               yOrder[2] = 2;
+               for (int j = 0, i = yOrder[j]; j < 3; j++, i = yOrder[j]) {
                   if (block.c.y - i < 0) { return; } // Respect the ceiling
-                  if (grid[block.c.y - i][block.c.x - 1 + x] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 0 + x] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 1 + x] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 2 + x] == EMPTY) {
-                     block.d.y = b.c.y - i; block.d.x = b.c.x - 1 + x;
-                     block.c.y = b.c.y - i; block.c.x = b.c.x + 0 + x;
-                     block.b.y = b.c.y - i; block.b.x = b.c.x + 1 + x;
-                     block.a.y = b.c.y - i; block.a.x = b.c.x + 2 + x;
+                  if (grid[block.c.y - i][block.c.x - 1 + xDif] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 0 + xDif] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 1 + xDif] == EMPTY &&
+                      grid[block.c.y - i][block.c.x + 2 + xDif] == EMPTY) {
+                     block.d.y = b.c.y - i; block.d.x = b.c.x - 1 + xDif;
+                     block.c.y = b.c.y - i; block.c.x = b.c.x + 0 + xDif;
+                     block.b.y = b.c.y - i; block.b.x = b.c.x + 1 + xDif;
+                     block.a.y = b.c.y - i; block.a.x = b.c.x + 2 + xDif;
+                     block.state += 90;
                      return;
                   }
-               }
-               return;
+               } return;
+            case 90: // 90 -> 180
+               xOrder[0] =  0; // b -> a -> c
+               xOrder[1] =  1;
+               xOrder[2] = -1;
+               if (block.c.y - 2 < 0) { yDif = - 2; }
+               for (int j = 0, i = xOrder[j]; j < 3; j++, i = xOrder[j]) {
+                  if (grid[block.c.y - 2][block.b.x + i] == EMPTY &&
+                      grid[block.c.y - 1][block.b.x + i] == EMPTY &&
+                      grid[block.c.y - 0][block.b.x + i] == EMPTY &&
+                      grid[block.c.y + 1][block.b.x + i] == EMPTY) {
+                     block.d.y = b.c.y - 2; block.d.x = b.b.x + i;
+                     block.c.y = b.c.y - 1; block.c.x = b.b.x + i;
+                     block.b.y = b.c.y - 0; block.b.x = b.b.x + i;
+                     block.a.y = b.c.y + 1; block.a.x = b.b.x + i;
+                     block.state += 90;
+                     return;
+                  }
+               } return;
             default:
                break;
          }
