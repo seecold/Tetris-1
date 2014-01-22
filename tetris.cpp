@@ -13,10 +13,10 @@ void mainLoop() {
    struct itimerval tout_val;
 
    // Our game clock. This alarm is synonymous to game speed.
-   tout_val.it_value.tv_sec = 50;
-   tout_val.it_value.tv_usec = 0;
-   tout_val.it_interval.tv_sec = 50;
-   tout_val.it_interval.tv_usec = 0;
+   tout_val.it_value.tv_sec = 0;
+   tout_val.it_value.tv_usec = 250000;
+   tout_val.it_interval.tv_sec = 0;
+   tout_val.it_interval.tv_usec = 250000;
    setitimer(ITIMER_REAL, &tout_val, 0);
    signal(SIGALRM, alarm_wakeup);
 
@@ -89,10 +89,14 @@ Block shift(Block test, int y, int x) {
    return test;
 }
 
+/* Rotation (clockwise):
+ * To make rotations more lenient (read: fun), allow several positions.
+ * Define what your ideal position is, and how far it can stray from that.
+ */
 void rotate() {
-   int defaultRange[3] = {0, 1, -1};
-   std::vector<int> xAlt (defaultRange, defaultRange + 3);
-   std::vector<int> yAlt (defaultRange, defaultRange + 3);
+   int range[5] = {0, -1, 1, -2, 2};
+   std::vector<int> xAlt (range, range + 5);
+   std::vector<int> yAlt (range, range + 5);
    Block test, ideal;
 
    switch(block.type) {
@@ -100,20 +104,84 @@ void rotate() {
          switch(block.state) {
             case 0: // 0 -> 90        ax, ay, bx, by, cx, cy, dx, dy
                ideal = calculateIdeal(2,  2,  1,  1,  0,  0,  -1, -1);
-               xAlt.push_back(-2);
                break;
             case 90: // 90 -> 180     ax, ay, bx, by, cx, cy, dx, dy 
                ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 2, -2);
                break;
             case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy 
                ideal = calculateIdeal(-2, -2, -1, -1, 0,  0,  1,  1);
-               xAlt.push_back(2);
                break;
             case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy 
                ideal = calculateIdeal(1, -1,  0,  0,  -1,  1, -2, 2);
-               yAlt.push_back(-2);
                break;
-         }
+         } break;
+      case L_BLOCK:
+         switch(block.state) {
+            case 0: // 0 -> 90        ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  1,  0,  0,  -1, -1, -2,  0);
+               break;
+            case 90: // 90 -> 180     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 0,  -2);
+               break;
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, -1, 0,  0,  1,  1,  2,  0);
+               break;
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1, -1,  0,  0,  -1,  1, 0,  2);
+               break;
+         } break;
+      case J_BLOCK:
+         switch(block.state) {
+            case 0: // 0 -> 90        ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  1,  0,  0,  -1, -1, 0,  -2);
+               break;
+            case 90: // 90 -> 180     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 2,  0);
+               break;
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, -1, 0,  0,  1,  1,  0,  2);
+               break;
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1, -1,  0,  0,  -1,  1, -2,  0);
+               break;
+         } break;
+      case T_BLOCK:
+         switch(block.state) {
+            case 0: // 0 -> 90        ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  -1, 0,  0,  -1, 1,  -1, -1);
+               break;
+            case 90: // 90 -> 180     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  1,  0,  0,  -1, -1, 1,  -1);
+               break;
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 1,  1);
+               break;
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, -1, 0,  0,  1,  1, -1,  1);
+               break;
+         } break;
+      case Z_BLOCK:
+         switch(block.state) {
+            case 0:   // 0 -> 90
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  0,  0,  1,  -1, 0,  -2, 1);
+               break;
+            case 90:  // 90 -> 180
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, 0,  0,  -1,  1, 0,  2,  -1);
+               break;
+         } break;
+      case S_BLOCK:
+         switch(block.state) {
+            case 0:   // 0 -> 90
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(-1, 2,  0,  1,  -1, 0,  0, -1);
+               break;
+            case 90:  // 90 -> 180
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(1,  -2, 0,  -1,  1, 0,  0,  1);
+               break;
+         } break;
       case O_BLOCK:
       default: break;
    }
@@ -124,7 +192,6 @@ void rotate() {
          if (fits(test) && isAvailable(test)) {
             block = test;
             block.state = (block.state + 90) % 360;
-            //printf(" STATE: %d", block.state);
             return;
          }
       }
