@@ -13,9 +13,9 @@ void mainLoop() {
    struct itimerval tout_val;
 
    // Our game clock. This alarm is synonymous to game speed.
-   tout_val.it_value.tv_sec = 1;
+   tout_val.it_value.tv_sec = 50;
    tout_val.it_value.tv_usec = 0;
-   tout_val.it_interval.tv_sec = 1;
+   tout_val.it_interval.tv_sec = 50;
    tout_val.it_interval.tv_usec = 0;
    setitimer(ITIMER_REAL, &tout_val, 0);
    signal(SIGALRM, alarm_wakeup);
@@ -50,58 +50,82 @@ void mainLoop() {
    }
 }
 
+Block calculateIdeal(int ax, int ay, int bx, int by, int cx, int cy, int dx, int dy) {
+   Block ideal = block;
+   ideal.a.x += ax; ideal.a.y += ay;
+   ideal.b.x += bx; ideal.b.y += by;
+   ideal.c.x += cx; ideal.c.y += cy;
+   ideal.d.x += dx; ideal.d.y += dy;
+   //printf("Ideal: (%d, %d), (%d, %d), (%d, %d), (%d, %d)", 
+   //ideal.a.x, ideal.a.y, ideal.b.x, ideal.b.y, ideal.c.x, ideal.c.y, ideal.d.x, ideal.d.y);
+   return ideal;
+}
+
+bool fits(Block test) {
+   if (test.a.x < 0  || test.b.x < 0  || test.c.x < 0  || test.d.x < 0 ||
+       test.a.x > 9  || test.b.x > 9  || test.c.x > 9  || test.d.x > 9 ||
+       test.a.y < 0  || test.b.y < 0  || test.c.y < 0  || test.d.y < 0 ||
+       test.a.y > 19 || test.b.y > 19 || test.c.y > 19 || test.d.y > 19) {
+      return false;
+   }
+   return true;
+}
+
+bool isAvailable(Block test) {
+   if (grid[test.a.y][test.a.x] != EMPTY ||
+       grid[test.b.y][test.b.x] != EMPTY ||
+       grid[test.c.y][test.c.x] != EMPTY ||
+       grid[test.d.y][test.d.x] != EMPTY) {
+      return false;
+   }
+   return true;
+}
+
+Block shift(Block test, int y, int x) {
+   test.a.y += y; test.b.y += y; test.c.y += y; test.d.y += y;
+   test.a.x += x; test.b.x += x; test.c.x += x; test.d.x += x;
+   return test;
+}
+
 void rotate() {
-   int yDif = 0, xDif = 0;
-   int i = 0, j = 0;
-   int xOrder[3] = {0, 0, 0};
-   int yOrder[3] = {0, 0, 0};
-   Block b = block;
+   std::vector<int> xAlt (1, 0);
+   std::vector<int> yAlt (1, 0);
+   Block test, ideal;
+
+   yAlt.push_back(1); yAlt.push_back(-1);
+   xAlt.push_back(1); xAlt.push_back(-1);
+
    switch(block.type) {
       case I_BLOCK:
          switch(block.state) {
-            case 0: // 0 -> 90
-               if (block.c.x - 1 < 0) { xDif =  1; } // Rotate next to left wall
-               if (block.c.x + 2 > 9) { xDif = -2; } // Rotate next to right wall
-               yOrder[0] = 0; // c -> b -> a
-               yOrder[1] = 1;
-               yOrder[2] = 2;
-               for (int j = 0, i = yOrder[j]; j < 3; j++, i = yOrder[j]) {
-                  if (block.c.y - i < 0) { return; } // Respect the ceiling
-                  if (grid[block.c.y - i][block.c.x - 1 + xDif] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 0 + xDif] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 1 + xDif] == EMPTY &&
-                      grid[block.c.y - i][block.c.x + 2 + xDif] == EMPTY) {
-                     block.d.y = b.c.y - i; block.d.x = b.c.x - 1 + xDif;
-                     block.c.y = b.c.y - i; block.c.x = b.c.x + 0 + xDif;
-                     block.b.y = b.c.y - i; block.b.x = b.c.x + 1 + xDif;
-                     block.a.y = b.c.y - i; block.a.x = b.c.x + 2 + xDif;
-                     block.state += 90;
-                     return;
-                  }
-               } return;
-            case 90: // 90 -> 180
-               xOrder[0] =  0; // b -> a -> c
-               xOrder[1] =  1;
-               xOrder[2] = -1;
-               if (block.c.y - 2 < 0) { yDif = - 2; }
-               for (int j = 0, i = xOrder[j]; j < 3; j++, i = xOrder[j]) {
-                  if (grid[block.c.y - 2][block.b.x + i] == EMPTY &&
-                      grid[block.c.y - 1][block.b.x + i] == EMPTY &&
-                      grid[block.c.y - 0][block.b.x + i] == EMPTY &&
-                      grid[block.c.y + 1][block.b.x + i] == EMPTY) {
-                     block.d.y = b.c.y - 2; block.d.x = b.b.x + i;
-                     block.c.y = b.c.y - 1; block.c.x = b.b.x + i;
-                     block.b.y = b.c.y - 0; block.b.x = b.b.x + i;
-                     block.a.y = b.c.y + 1; block.a.x = b.b.x + i;
-                     block.state += 90;
-                     return;
-                  }
-               } return;
-            default:
+            case 0: // 0 -> 90        ax, ay, bx, by, cx, cy, dx, dy
+               ideal = calculateIdeal(2,  2,  1,  1,  0,  0,  -1, -1);
+               xAlt.push_back(-2);
+               break;
+            case 90: // 90 -> 180     ax, ay, bx, by, cx, cy, dx, dy 
+               ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 2, -2);
+               break;
+            case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy 
+               ideal = calculateIdeal(-2, -2, -1,  -1,  0,  0,  1,  1);
+               xAlt.push_back(2);
+               break;
+            case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy 
+               ideal = calculateIdeal(1, -1, 0,  0,  -1,  1,  -2,  2);
                break;
          }
-         break;
       default: break;
+   }
+
+   for (int x : xAlt) {
+      for (int y : yAlt) {
+         test = shift(ideal, y, x);
+         if (fits(test) && isAvailable(test)) {
+            block = test;
+            block.state = (block.state + 90) % 360;
+            //printf(" STATE: %d", block.state);
+            return;
+         }
+      }
    }
 }
 
@@ -367,22 +391,22 @@ void printBlocks() {
    color(block.type);
    if (block.a.y >= 0) {
       print(Y_OFFSET + block.a.y * 2,     X_OFFSET + block.a.x * 5, "|' '|");
-      print(Y_OFFSET + block.a.y * 2 + 1, X_OFFSET + block.a.x * 5, "|_ _|");
+      print(Y_OFFSET + block.a.y * 2 + 1, X_OFFSET + block.a.x * 5, "|_a_|");
    }
 
    if (block.b.y >= 0) {
       print(Y_OFFSET + block.b.y * 2,     X_OFFSET + block.b.x * 5, "|' '|");
-      print(Y_OFFSET + block.b.y * 2 + 1, X_OFFSET + block.b.x * 5, "|_ _|");
+      print(Y_OFFSET + block.b.y * 2 + 1, X_OFFSET + block.b.x * 5, "|_b_|");
    }
 
    if (block.c.y >= 0) {
       print(Y_OFFSET + block.c.y * 2,     X_OFFSET + block.c.x * 5, "|' '|");
-      print(Y_OFFSET + block.c.y * 2 + 1, X_OFFSET + block.c.x * 5, "|_ _|");
+      print(Y_OFFSET + block.c.y * 2 + 1, X_OFFSET + block.c.x * 5, "|_c_|");
    }
 
    if (block.d.y >= 0) {
       print(Y_OFFSET + block.d.y * 2,     X_OFFSET + block.d.x * 5, "|' '|");
-      print(Y_OFFSET + block.d.y * 2 + 1, X_OFFSET + block.d.x * 5, "|_ _|");
+      print(Y_OFFSET + block.d.y * 2 + 1, X_OFFSET + block.d.x * 5, "|_d_|");
    }
 
    // Print Fallen Blocks
