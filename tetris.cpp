@@ -35,6 +35,7 @@ void mainLoop() {
            // For now, this is the 'start'
             case 'r' :
                refreshBlock();
+               redraw();
                break;
             case ' ':
                space();
@@ -43,6 +44,7 @@ void mainLoop() {
                break;
             case 'e':
                emptyGrid();
+               redraw();
                break;
          }
       }
@@ -88,12 +90,10 @@ Block shift(Block test, int y, int x) {
 }
 
 void rotate() {
-   std::vector<int> xAlt (1, 0);
-   std::vector<int> yAlt (1, 0);
+   int defaultRange[3] = {0, 1, -1};
+   std::vector<int> xAlt (defaultRange, defaultRange + 3);
+   std::vector<int> yAlt (defaultRange, defaultRange + 3);
    Block test, ideal;
-
-   yAlt.push_back(1); yAlt.push_back(-1);
-   xAlt.push_back(1); xAlt.push_back(-1);
 
    switch(block.type) {
       case I_BLOCK:
@@ -106,13 +106,15 @@ void rotate() {
                ideal = calculateIdeal(-1, 1,  0,  0,  1,  -1, 2, -2);
                break;
             case 180: // 180 -> 270   ax, ay, bx, by, cx, cy, dx, dy 
-               ideal = calculateIdeal(-2, -2, -1,  -1,  0,  0,  1,  1);
+               ideal = calculateIdeal(-2, -2, -1, -1, 0,  0,  1,  1);
                xAlt.push_back(2);
                break;
             case 270: // 270 -> 0     ax, ay, bx, by, cx, cy, dx, dy 
-               ideal = calculateIdeal(1, -1, 0,  0,  -1,  1,  -2,  2);
+               ideal = calculateIdeal(1, -1,  0,  0,  -1,  1, -2, 2);
+               yAlt.push_back(-2);
                break;
          }
+      case O_BLOCK:
       default: break;
    }
 
